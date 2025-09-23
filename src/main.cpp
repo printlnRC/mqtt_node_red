@@ -25,16 +25,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 
 //_______________Test MQTT________________//
-boolean reconnect() {
-  if (client.connect("espClient", mqtt_user, mqtt_password)) {
-    // Une fois connecté, on publie un message
-    client.publish("esp32/bme280/temperature", "32");
-    client.publish("esp32/bme280/humidity", "60");
-    client.publish("esp32/bme280/pression", "1050");
-    // ... et on s'abonne au topic
-    client.subscribe("inTopic");
+int temperature = 0;
+
+bool reconnect() {
+  if (client.connect("ESP32Client", mqtt_user, mqtt_password)) {
+    // Subscribe to topics if needed
+    // client.subscribe("your/topic");
+    return true;
   }
-  return client.connected();
+  return false;
 }
 
 //--------------Fin test MQTT----------------//
@@ -64,6 +63,8 @@ void setup() {
   //--------------Fin partie MQTT----------------//
 }
 
+
+
 void loop() {
   if (!client.connected()) {
     long now = millis();
@@ -76,4 +77,14 @@ void loop() {
   } else {
     client.loop();
   }
+
+  while (temperature <= 50) {
+    temperature++;
+    Serial.print("Température: ");
+    Serial.println(temperature);
+    // Publier la température sur le topic "capteur/temperature"
+    client.publish("esp32/bme280/temperature", String(temperature).c_str());
+    delay(1000); // Attendre 2 secondes avant la prochaine lecture
+  }
+  temperature = 0; // Réinitialiser la température pour la prochaine boucle
 }
